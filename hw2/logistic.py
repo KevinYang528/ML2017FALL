@@ -147,7 +147,7 @@ def infer(X_test, save_dir, output_dir):
 
 def main(argv):
     # Load feature and label
-    print(argv[1])
+    # print(argv[1])
     X_all, Y_all, X_test = load_data(argv[1], argv[2], argv[3])
     # Normalization
     X_all, X_test = normalize(X_all, X_test)
