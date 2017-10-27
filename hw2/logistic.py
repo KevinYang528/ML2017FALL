@@ -14,6 +14,20 @@ def load_data(train_data_path, train_label_path, test_data_path):
     Y_train = np.array(Y_train.values)
     X_test = pd.read_csv(test_data_path, sep=',', header=0)
     X_test = np.array(X_test.values)
+    
+    atributes = [0, 1, 3, 4, 5]
+    X_train = np.concatenate((X_train,
+        X_train[:, atributes] ** 2,
+        X_train[:, atributes] ** 3,
+        X_train[:, atributes] ** 4),
+        axis=1)
+    X_test = np.concatenate((X_test,
+        X_test[:, atributes] ** 2,
+        X_test[:, atributes] ** 3,
+        X_test[:, atributes] ** 4),
+        axis=1)
+    
+    print(X_train.shape)
 
     return (X_train, Y_train, X_test)
 
@@ -42,13 +56,13 @@ def split_valid_set(X_all, Y_all, percentage):
 
     X_all, Y_all = _shuffle(X_all, Y_all)
 
-    X_train, Y_train = X_all[0:valid_data_size], Y_all[0:valid_data_size]
-    X_valid, Y_valid = X_all[valid_data_size:], Y_all[valid_data_size:]
+    X_valid, Y_valid = X_all[0:valid_data_size], Y_all[0:valid_data_size]
+    X_train, Y_train = X_all[valid_data_size:], Y_all[valid_data_size:]
 
     return X_train, Y_train, X_valid, Y_valid
 
 def sigmoid(z):
-    res = 1 / (1.0 + np.exp(-z))
+    res = 1.0 / (1.0 + np.exp(-z))
     return np.clip(res, 1e-8, 1-(1e-8))
 
 def valid(w, b, X_valid, Y_valid):
@@ -64,19 +78,21 @@ def valid(w, b, X_valid, Y_valid):
 def train(X_all, Y_all, save_dir):
 
     # Split a 10%-validation set from the training set
-    valid_set_percentage = 0.2
+    valid_set_percentage = 0.1
     X_train, Y_train, X_valid, Y_valid = split_valid_set(X_all, Y_all, valid_set_percentage)
+    print('Validation set training size: %s' % (X_train.shape, ))
 
     # Initiallize parameter, hyperparameter
-    w = np.zeros((106,))
+    w = np.zeros((X_train.shape[1],))
     b = np.zeros((1,))
     l_rate = 0.5
     w_lr = 0.0
     b_lr = 0.0
-    batch_size = 32
+    c = 0.0
+    batch_size = 320
     train_data_size = len(X_train)
     step_num = int(floor(train_data_size / batch_size))
-    epoch_num = 1000
+    epoch_num = 2000
     save_param_iter = 100
 
     # Start training
@@ -90,7 +106,7 @@ def train(X_all, Y_all, save_dir):
             np.savetxt(os.path.join(save_dir, 'w'), w)
             np.savetxt(os.path.join(save_dir, 'b'), [b,])
             print('epoch avg loss = %f' % (total_loss / (float(save_param_iter) * train_data_size)))
-            print('cross entropy = %f' % cross_entropy)
+            print('cross entropy = %f' % (cross_entropy / train_data_size))
             total_loss = 0.0
             valid(w, b, X_valid, Y_valid)
 
@@ -109,11 +125,12 @@ def train(X_all, Y_all, save_dir):
             cross_entropy = -1 * (np.dot(np.squeeze(Y), np.log(y)) + np.dot((1 - np.squeeze(Y)), np.log(1 - y)))
             total_loss += cross_entropy
 
-            w_grad = np.sum(-1 * X * (np.squeeze(Y) - y).reshape((batch_size,1)), axis=0)
+            w_grad = np.sum(-1 * X * (np.squeeze(Y) - y).reshape((batch_size,1)), axis=0) + c * sum(w)
             b_grad = np.sum(-1 * (np.squeeze(Y) - y))
 
-            b_lr = b_lr + b_grad**2
-            w_lr = w_lr + w_grad**2
+
+            b_lr = b_lr + b_grad ** 2
+            w_lr = w_lr + w_grad ** 2
 
             # SGD updating parameters
             w = w - l_rate / np.sqrt(w_lr) * w_grad
@@ -147,7 +164,7 @@ def infer(X_test, save_dir, output_dir):
 
 def main(argv):
     # Load feature and label
-    # print(argv[1])
+    print(argv[1])
     X_all, Y_all, X_test = load_data(argv[1], argv[2], argv[3])
     # Normalization
     X_all, X_test = normalize(X_all, X_test)
