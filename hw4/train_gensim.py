@@ -54,7 +54,7 @@ with open('tokenizer/tokenizer_mark.pkl', 'rb') as handle:
     tokenizer = pickle.load(handle)
 
 train_seq = tokenizer.texts_to_sequences(train_list)
-nolabel = pad_sequences(nolabel_seq, maxlen=maxlen)
+# nolabel_seq = tokenizer.texts_to_sequences(nolabel_list)
 word_index = tokenizer.word_index
 print('Found %s unique tokens.' % len(word_index))
 
@@ -81,6 +81,7 @@ print('Found %s unique tokens.' % len(word_index))
 
 maxlen = 40
 train = pad_sequences(train_seq, maxlen=maxlen)
+# nolabel = pad_sequences(nolabel_seq, maxlen=maxlen)
 model = Word2Vec.load('w2v/word2vec_mark.pkl')
 weights = model.wv.syn0
 
