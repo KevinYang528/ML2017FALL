@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import sys
 from keras.models import load_model
-import matplotlib.pyplot as plt
+
 
 test = pd.read_csv(sys.argv[1]);
 test_x = test.feature.str.split(' ').tolist()
